@@ -1,6 +1,6 @@
 import './MonthView.css'
 
-const MonthView = ({ currentMonth, onDayClick, getActivity }) => {
+const MonthView = ({ currentMonth, onDayClick, getActivity, isNationalHoliday }) => {
   const today = new Date()
   
   // Obține prima zi a lunii și numărul de zile
@@ -29,16 +29,25 @@ const MonthView = ({ currentMonth, onDayClick, getActivity }) => {
     
     const dayOfWeek = date.getDay()
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6 // Duminică sau Sâmbătă
+    const holiday = isNationalHoliday(date) // Verifică dacă este sărbătoare legală
     const isToday = date.toDateString() === today.toDateString()
     const isFuture = date > today
-    const hasActivity = getActivity(date).trim() !== ''
+    const activity = getActivity(date)
+    
+    // Verifică dacă există activitate (string sau obiect)
+    const hasActivity = activity && (
+      (typeof activity === 'string' && activity.trim() !== '') ||
+      (typeof activity === 'object' && (activity.isVacation || (activity.projects && activity.projects.length > 0)))
+    )
     
     let classes = ['calendar-day']
     
     if (isWeekend) classes.push('weekend')
+    if (holiday) classes.push('national-holiday') // Clasă nouă pentru sărbători
     if (isToday) classes.push('today')
     if (isFuture) classes.push('future')
     if (hasActivity) classes.push('has-activity')
+    if (activity && activity.isVacation) classes.push('vacation-day')
     
     return classes.join(' ')
   }
@@ -65,14 +74,76 @@ const MonthView = ({ currentMonth, onDayClick, getActivity }) => {
             {date && (
               <>
                 <span className="day-number">{date.getDate()}</span>
-                {getActivity(date) && (
-                  <div className="activity-indicator">
-                    <span className="activity-text">
-                      {getActivity(date).substring(0, 20)}
-                      {getActivity(date).length > 20 ? '...' : ''}
-                    </span>
-                  </div>
-                )}
+                {(() => {
+                  const holiday = isNationalHoliday(date)
+                  
+                  // Afișează sărbătoarea legală dacă există
+                  if (holiday) {
+                    return (
+                      <div className="holiday-indicator">
+                        <div className="holiday-icon">🎉</div>
+                        <div className="holiday-name">{holiday.name}</div>
+                      </div>
+                    )
+                  }
+                  
+                  const activity = getActivity(date)
+                  
+                  if (!activity) return null
+                  
+                  // Format nou - obiect cu concediu
+                  if (activity.isVacation) {
+                    return (
+                      <div className="vacation-indicator">
+                        <div className="vacation-icon">🏖️</div>
+                        <div className="vacation-text">Concediu</div>
+                        <div className="vacation-hours">{activity.vacationHours || 8}h</div>
+                      </div>
+                    )
+                  }
+                  
+                  // Format nou - obiect cu proiecte
+                  if (activity.projects && activity.projects.length > 0) {
+                    const totalHours = activity.projects.reduce((sum, p) => sum + p.hours, 0)
+                    return (
+                      <div className="activity-indicator">
+                        <div className="activity-summary">
+                          <span className="total-hours">{totalHours}h</span>
+                          <span className="projects-count">
+                            {activity.projects.length} proiect{activity.projects.length > 1 ? 'e' : ''}
+                          </span>
+                        </div>
+                        <div className="projects-preview">
+                          {activity.projects.slice(0, 2).map((project, idx) => (
+                            <div key={idx} className="project-preview">
+                              {project.description.substring(0, 15)}
+                              {project.description.length > 15 ? '...' : ''}
+                            </div>
+                          ))}
+                          {activity.projects.length > 2 && (
+                            <div className="more-projects">
+                              +{activity.projects.length - 2} mai mult{activity.projects.length - 2 > 1 ? 'e' : ''}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  }
+                  
+                  // Format vechi - string simplu
+                  if (typeof activity === 'string' && activity.trim() !== '') {
+                    return (
+                      <div className="activity-indicator">
+                        <span className="activity-text">
+                          {activity.substring(0, 20)}
+                          {activity.length > 20 ? '...' : ''}
+                        </span>
+                      </div>
+                    )
+                  }
+                  
+                  return null
+                })()}
               </>
             )}
           </div>

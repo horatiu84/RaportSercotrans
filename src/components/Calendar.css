@@ -20,6 +20,29 @@
   font-weight: 500;
 }
 
+.header-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.manage-projects-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.manage-projects-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
 .change-employee-button {
   background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
   color: white;
@@ -35,6 +58,20 @@
 .change-employee-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+}
+
+/* Responsive pentru header buttons */
+@media (max-width: 768px) {
+  .header-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .manage-projects-button,
+  .change-employee-button {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 .calendar-header {
@@ -108,6 +145,20 @@
 
 .export-button:active {
   transform: translateY(0);
+}
+
+.export-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.export-button.formatted {
+  background: linear-gradient(135deg, #6f42c1 0%, #8e6bc2 100%);
+}
+
+.export-button.formatted:hover {
+  box-shadow: 0 4px 8px rgba(111, 66, 193, 0.3);
 }
 
 .export-button {

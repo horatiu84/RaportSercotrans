@@ -1,0 +1,229 @@
+.project-manager-overlay {
+  z-index: 1100;
+}
+
+.project-manager-modal {
+  max-width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.project-manager-body {
+  padding: 2rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.add-project-section {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.add-project-section h4 {
+  color: #495057;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.add-project-form {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.project-input {
+  flex: 1;
+  padding: 0.8rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.3s ease;
+}
+
+.project-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.add-project-button {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.add-project-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.add-project-button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.projects-list-section h4 {
+  color: #495057;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.project-item {
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.project-item:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.project-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.project-name {
+  font-weight: 600;
+  color: #495057;
+  font-size: 1.1rem;
+}
+
+.project-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-project-button,
+.delete-project-button {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 1rem;
+}
+
+.edit-project-button:hover {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.delete-project-button:hover:not(:disabled) {
+  background: rgba(220, 53, 69, 0.1);
+}
+
+.delete-project-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.edit-project-form {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.edit-input {
+  flex: 1;
+}
+
+.edit-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.save-edit-button,
+.cancel-edit-button {
+  background: none;
+  border: 2px solid;
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.save-edit-button {
+  border-color: #28a745;
+  color: #28a745;
+}
+
+.save-edit-button:hover:not(:disabled) {
+  background: #28a745;
+  color: white;
+}
+
+.save-edit-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.cancel-edit-button {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.cancel-edit-button:hover {
+  background: #dc3545;
+  color: white;
+}
+
+.close-project-manager-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.close-project-manager-button:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .project-manager-modal {
+    width: 95%;
+    margin: 1rem;
+  }
+  
+  .add-project-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .project-display {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .edit-project-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

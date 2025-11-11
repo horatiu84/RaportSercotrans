@@ -71,6 +71,43 @@
   color: #e65100;
 }
 
+/* National Holiday styling */
+.national-holiday {
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  border: 2px solid #ef5350;
+}
+
+.national-holiday:hover {
+  background: linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%);
+}
+
+.national-holiday .day-number {
+  color: #c62828;
+  font-weight: 700;
+}
+
+.holiday-indicator {
+  margin-top: 0.5rem;
+  text-align: center;
+  padding: 0.3rem;
+  background: rgba(239, 83, 80, 0.1);
+  border-radius: 4px;
+  border: 1px dashed #ef5350;
+}
+
+.holiday-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.holiday-name {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #c62828;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
 /* Today styling */
 .today {
   border-color: #007bff;
@@ -113,6 +150,54 @@
 .activity-indicator {
   flex: 1;
   margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.activity-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(40, 167, 69, 0.1);
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  border-left: 3px solid #28a745;
+}
+
+.total-hours {
+  font-weight: 700;
+  color: #28a745;
+  font-size: 0.8rem;
+}
+
+.projects-count {
+  font-size: 0.7rem;
+  color: #666;
+}
+
+.projects-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.project-preview {
+  font-size: 0.65rem;
+  color: #555;
+  background: rgba(102, 126, 234, 0.1);
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  border-left: 2px solid #667eea;
+  line-height: 1.2;
+}
+
+.more-projects {
+  font-size: 0.6rem;
+  color: #888;
+  font-style: italic;
+  text-align: center;
+  padding: 0.2rem;
 }
 
 .activity-text {
@@ -146,4 +231,44 @@
     font-size: 0.7rem;
     padding: 0.2rem;
   }
+}
+
+/* Vacation Day Styles */
+.vacation-day {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%) !important;
+  border: 2px solid #ffb74d !important;
+}
+
+.vacation-day:hover {
+  background: linear-gradient(135deg, #ffe0b2 0%, #ffcc80 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 183, 77, 0.3);
+}
+
+.vacation-indicator {
+  margin-top: 0.5rem;
+  text-align: center;
+  padding: 0.3rem;
+}
+
+.vacation-icon {
+  font-size: 1.2rem;
+  margin-bottom: 0.2rem;
+}
+
+.vacation-text {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #e65100;
+  margin-bottom: 0.2rem;
+}
+
+.vacation-hours {
+  font-size: 0.65rem;
+  color: #bf360c;
+  font-weight: 600;
+  background: rgba(255, 183, 77, 0.3);
+  border-radius: 4px;
+  padding: 0.1rem 0.3rem;
+  display: inline-block;
 }
