@@ -885,7 +885,7 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
         <div className="notifications-panel">
           <div className="notifications-header">
             <h3>🔔 Zile Incomplete</h3>
-            <button onClick={() => setShowNotifications(false)}>✕</button>
+            <button className="close-notifications-btn" onClick={() => setShowNotifications(false)}>✕</button>
           </div>
           <div className="notifications-body">
             {getIncompleteDays().length === 0 ? (

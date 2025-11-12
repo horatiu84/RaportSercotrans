@@ -261,20 +261,25 @@
   font-weight: 500;
 }
 
-.notifications-header button {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  font-size: 1.5rem;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background 0.2s ease;
+.close-notifications-btn {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: none !important;
+  color: white !important;
+  font-size: 1.5rem !important;
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+  transition: background 0.2s ease !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
 }
 
-.notifications-header button:hover {
-  background: rgba(255, 255, 255, 0.3);
+.close-notifications-btn:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
 }
 
 .notifications-body {
