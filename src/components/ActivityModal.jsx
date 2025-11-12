@@ -155,7 +155,7 @@ const ActivityModal = ({ date, activity, projects, onSave, onDelete, onClose }) 
                   onChange={(e) => setVacationHours(parseInt(e.target.value) || 8)}
                   min="1"
                   max="24"
-                  step="0.5"
+                  step="1"
                   className="hours-input"
                 />
                 <span className="hours-label">ore</span>
@@ -203,7 +203,7 @@ const ActivityModal = ({ date, activity, projects, onSave, onDelete, onClose }) 
                           onChange={(e) => updateProjectActivity(index, 'hours', parseInt(e.target.value) || 0)}
                           min="0"
                           max="24"
-                          step="0.5"
+                          step="1"
                           className="hours-input"
                         />
                         <span className="hours-label">ore</span>

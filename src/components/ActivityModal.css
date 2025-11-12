@@ -302,6 +302,8 @@
   align-items: center;
   gap: 0.3rem;
   white-space: nowrap;
+  position: relative;
+  z-index: 1;
 }
 
 .hours-input {
@@ -311,11 +313,28 @@
   border-radius: 6px;
   font-size: 0.9rem;
   text-align: center;
+  appearance: textfield; /* Standard */
+  -moz-appearance: textfield; /* Firefox */
+  position: relative;
+  z-index: 2;
+}
+
+/* Asigură-te că săgețile sunt vizibile pe Chrome/Safari/Edge */
+.hours-input::-webkit-inner-spin-button,
+.hours-input::-webkit-outer-spin-button {
+  opacity: 1;
+  height: 30px;
+  cursor: pointer;
+  position: relative;
+  z-index: 3;
 }
 
 .hours-label {
   color: #6c757d;
   font-size: 0.9rem;
+  pointer-events: none; /* Nu blochează click-urile */
+  user-select: none;
+  z-index: 1;
 }
 
 .remove-project-button {

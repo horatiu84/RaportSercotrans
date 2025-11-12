@@ -273,6 +273,35 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
     return incompleteDays
   }
 
+  // Funcție pentru calcularea overtime pentru o zi anume
+  const getOvertimeForDay = (date) => {
+    const dateKey = getDateKey(date)
+    const activity = activities[dateKey]
+    
+    if (!activity || !activity.projects || activity.projects.length === 0) {
+      return 0
+    }
+    
+    const dayOfWeek = date.getDay()
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+    const holiday = isNationalHoliday(date)
+    
+    // Calculează total ore pentru ziua respectivă (doar proiecte, nu concediu)
+    const dayProjectHours = activity.projects.reduce((sum, p) => sum + p.hours, 0)
+    
+    // Calculează overtime pentru ziua respectivă
+    let dayOvertime = 0
+    if (isWeekend || holiday) {
+      // Weekend sau sărbătoare: TOATE orele sunt overtime
+      dayOvertime = dayProjectHours
+    } else {
+      // Zi normală: overtime = ore peste 8
+      dayOvertime = Math.max(0, dayProjectHours - 8)
+    }
+    
+    return dayOvertime
+  }
+
   const canNavigateNext = () => {
     const today = new Date()
     const currentYear = today.getFullYear()
@@ -366,8 +395,10 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
       [`Angajat: ${employeeName}`],
       [`Luna: ${currentDate.toLocaleDateString('ro-RO', { year: 'numeric', month: 'long' })}`],
       [],
-      ['Data', 'Ziua', 'Proiect', 'Ore', 'Descriere Activități', 'Status']
+      ['Data', 'Ziua', 'Proiect', 'Ore', 'Descriere Activități', 'Status', 'Overtime']
     ]
+
+    let totalOvertimeHours = 0
 
     Object.entries(groupedByDate).forEach(([, dayActivities]) => {
       const firstActivity = dayActivities[0]
@@ -379,6 +410,23 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
       const dayStr = date.toLocaleDateString('ro-RO', { weekday: 'long' })
       const statusStr = holiday ? `🎉 ${holiday.name}` : (isWeekend ? 'Weekend' : 'Zi lucrătoare')
 
+      // Calculează total ore pentru ziua respectivă (doar proiecte, nu concediu)
+      const dayProjectHours = dayActivities
+        .filter(a => a.type === 'project')
+        .reduce((sum, a) => sum + a.hours, 0)
+      
+      // Calculează overtime pentru ziua respectivă
+      let dayOvertime = 0
+      if (isWeekend || holiday) {
+        // Weekend sau sărbătoare: TOATE orele sunt overtime
+        dayOvertime = dayProjectHours
+      } else {
+        // Zi normală: overtime = ore peste 8
+        dayOvertime = Math.max(0, dayProjectHours - 8)
+      }
+      
+      totalOvertimeHours += dayOvertime
+
       dayActivities.forEach((activity, index) => {
         if (activity.type === 'holiday') {
           worksheetData.push([
@@ -387,7 +435,8 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
             `🎉 SĂRBĂTOARE LEGALĂ: ${activity.name.toUpperCase()}`,
             0,
             `Zi liberă conform Legii nr. 53/2003 - ${activity.name}`,
-            index === 0 ? statusStr : ''
+            index === 0 ? statusStr : '',
+            index === 0 && dayOvertime > 0 ? dayOvertime : ''
           ])
         } else if (activity.type === 'vacation') {
           worksheetData.push([
@@ -396,7 +445,8 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
             '🏖️ CONCEDIU DE ODIHNĂ',
             activity.hours,
             'Concediu de odihnă conform legislației în vigoare',
-            index === 0 ? (holiday ? statusStr : 'Concediu') : ''
+            index === 0 ? (holiday ? statusStr : 'Concediu') : '',
+            index === 0 && dayOvertime > 0 ? dayOvertime : ''
           ])
         } else {
           // Normalizează ID-urile la string pentru comparație
@@ -409,7 +459,8 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
             projectName,
             activity.hours,
             activity.description,
-            index === 0 ? statusStr : ''
+            index === 0 ? statusStr : '',
+            index === 0 && dayOvertime > 0 ? dayOvertime : ''
           ])
         }
       })
@@ -423,14 +474,28 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
     const totalVacationHours = allVacations.reduce((sum, vacation) => sum + vacation.hours, 0)
     const totalProjectHours = allProjectActivities.reduce((sum, pa) => sum + pa.hours, 0)
     const totalHours = totalVacationHours + totalProjectHours
-    const uniqueDates = [...new Set(allActivities.map(activity => activity.dateKey))]
-    const uniqueWorkDates = [...new Set(allProjectActivities
-      .filter(pa => {
-        const dayOfWeek = pa.date.getDay()
-        return dayOfWeek !== 0 && dayOfWeek !== 6
-      })
-      .map(pa => pa.dateKey)
-    )]
+    
+    // Calculează zile cu activități REALE (doar zile în care s-a lucrat efectiv)
+    const workDaysWithActivity = new Set()
+    allProjectActivities.forEach(pa => {
+      const dayOfWeek = pa.date.getDay()
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+      const holiday = isNationalHoliday(pa.date)
+      
+      // Adaugă ziua DOAR dacă:
+      // - Este zi normală (luni-vineri non-sărbătoare) SAU
+      // - Este weekend/sărbătoare DAR are proiecte (deci overtime)
+      if (!isWeekend && !holiday) {
+        // Zi normală cu activitate
+        workDaysWithActivity.add(pa.dateKey)
+      } else if (isWeekend || holiday) {
+        // Weekend/sărbătoare - verifică dacă are proiecte (overtime)
+        const dayProjects = allProjectActivities.filter(p => p.dateKey === pa.dateKey)
+        if (dayProjects.length > 0) {
+          workDaysWithActivity.add(pa.dateKey)
+        }
+      }
+    })
 
     // Calculează ore pe fiecare proiect
     const projectHoursMap = {}
@@ -443,8 +508,7 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
       projectHoursMap[projectName] += pa.hours
     })
 
-    worksheetData.push([`Total zile cu activități: ${uniqueDates.length}`])
-    worksheetData.push([`Zile lucrătoare: ${uniqueWorkDates.length}`])
+    worksheetData.push([`Total zile lucrate: ${workDaysWithActivity.size}`])
     worksheetData.push([`Sărbători legale: ${totalHolidayDays}`])
     worksheetData.push([`Zile concediu: ${totalVacationDays}`])
     worksheetData.push([])
@@ -461,6 +525,8 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
     worksheetData.push([])
     worksheetData.push([`Total ore concediu: ${totalVacationHours}h`])
     worksheetData.push([`Total ore generale: ${totalHours}h`])
+    worksheetData.push([])
+    worksheetData.push([`🔥 Total ore OVERTIME: ${totalOvertimeHours}h`])
 
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
 
@@ -469,10 +535,10 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
 
     // Merge-uri pentru header și footer
     const merges = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, // Titlu
-      { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }, // Angajat
-      { s: { r: 2, c: 0 }, e: { r: 2, c: 5 } }, // Luna
-      { s: { r: statisticsRowIndex, c: 0 }, e: { r: statisticsRowIndex, c: 5 } } // Statistici
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, // Titlu
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }, // Angajat
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 6 } }, // Luna
+      { s: { r: statisticsRowIndex, c: 0 }, e: { r: statisticsRowIndex, c: 6 } } // Statistici
     ]
 
     // Adaugă merge-uri pentru zile cu mai multe proiecte
@@ -485,6 +551,8 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
         merges.push({ s: { r: currentRow, c: 1 }, e: { r: currentRow + dayActivities.length - 1, c: 1 } })
         // Merge celulele pentru Status (coloana F = 5)
         merges.push({ s: { r: currentRow, c: 5 }, e: { r: currentRow + dayActivities.length - 1, c: 5 } })
+        // Merge celulele pentru Overtime (coloana G = 6)
+        merges.push({ s: { r: currentRow, c: 6 }, e: { r: currentRow + dayActivities.length - 1, c: 6 } })
       }
       currentRow += dayActivities.length
     })
@@ -498,7 +566,8 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
       { wch: 30 },  // C: Proiect - 30 caractere
       { wch: 8 },   // D: Ore - 8 caractere
       { wch: 60 },  // E: Descriere Activități - 60 caractere (cel mai mare)
-      { wch: 15 }   // F: Status - 15 caractere
+      { wch: 15 },  // F: Status - 15 caractere
+      { wch: 10 }   // G: Overtime - 10 caractere
     ]
 
     // Setează înălțimea rândurilor pentru o vizibilitate mai bună
@@ -856,6 +925,7 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
         activities={activities}
         getActivity={getActivity}
         isNationalHoliday={isNationalHoliday}
+        getOvertimeForDay={getOvertimeForDay}
       />
 
       {showModal && selectedDate && (

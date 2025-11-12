@@ -1,6 +1,6 @@
 import './MonthView.css'
 
-const MonthView = ({ currentMonth, onDayClick, getActivity, isNationalHoliday }) => {
+const MonthView = ({ currentMonth, onDayClick, getActivity, isNationalHoliday, getOvertimeForDay }) => {
   const today = new Date()
   
   // Obține prima zi a lunii și numărul de zile
@@ -105,6 +105,7 @@ const MonthView = ({ currentMonth, onDayClick, getActivity, isNationalHoliday })
                   // Format nou - obiect cu proiecte
                   if (activity.projects && activity.projects.length > 0) {
                     const totalHours = activity.projects.reduce((sum, p) => sum + p.hours, 0)
+                    const overtime = getOvertimeForDay(date)
                     return (
                       <div className="activity-indicator">
                         <div className="activity-summary">
@@ -113,6 +114,11 @@ const MonthView = ({ currentMonth, onDayClick, getActivity, isNationalHoliday })
                             {activity.projects.length} proiect{activity.projects.length > 1 ? 'e' : ''}
                           </span>
                         </div>
+                        {overtime > 0 && (
+                          <div className="overtime-badge">
+                            🔥 {overtime}h overtime
+                          </div>
+                        )}
                         <div className="projects-preview">
                           {activity.projects.slice(0, 2).map((project, idx) => (
                             <div key={idx} className="project-preview">
