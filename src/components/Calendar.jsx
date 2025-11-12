@@ -74,6 +74,7 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
   const [activities, setActivities] = useState({})
   const [showModal, setShowModal] = useState(false)
   const [showProjectManager, setShowProjectManager] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
   const [projects, setProjects] = useState([
     { id: '1', name: 'Proiect 1', description: 'Descriere proiect 1' },
     { id: '2', name: 'Proiect 2', description: 'Descriere proiect 2' }
@@ -212,6 +213,64 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
     }
     
     return activity
+  }
+
+  const deleteActivity = (date) => {
+    const dateKey = getDateKey(date)
+    const newActivities = { ...activities }
+    delete newActivities[dateKey]
+    setActivities(newActivities)
+    localStorage.setItem('sercotrans-activities', JSON.stringify(newActivities))
+  }
+
+  // Funcție pentru a găsi zilele incomplete (zile lucrătoare fără activități)
+  const getIncompleteDays = () => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    const incompleteDays = []
+    const currentYear = currentDate.getFullYear()
+    const currentMonth = currentDate.getMonth()
+    
+    // Verifică doar zilele din luna curentă afișată, până la ziua de azi
+    const endDate = today < new Date(currentYear, currentMonth + 1, 0) ? today : new Date(currentYear, currentMonth + 1, 0)
+    
+    for (let day = 1; day <= endDate.getDate(); day++) {
+      const checkDate = new Date(currentYear, currentMonth, day)
+      
+      // Nu verifica zilele viitoare
+      if (checkDate > today) break
+      
+      const dayOfWeek = checkDate.getDay()
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+      const holiday = isNationalHoliday(checkDate)
+      const isWorkDay = !isWeekend && !holiday
+      
+      if (isWorkDay) {
+        const dateKey = getDateKey(checkDate)
+        const activity = activities[dateKey]
+        
+        // Verifică dacă nu are activitate sau activitatea e goală
+        const hasActivity = activity && (
+          activity.isVacation ||
+          (activity.projects && activity.projects.length > 0 && 
+           activity.projects.some(p => p.hours > 0 && p.description.trim() !== ''))
+        )
+        
+        if (!hasActivity) {
+          incompleteDays.push({
+            date: checkDate,
+            dateStr: checkDate.toLocaleDateString('ro-RO', { 
+              weekday: 'short', 
+              day: 'numeric', 
+              month: 'short' 
+            })
+          })
+        }
+      }
+    }
+    
+    return incompleteDays
   }
 
   const canNavigateNext = () => {
@@ -373,22 +432,47 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
       .map(pa => pa.dateKey)
     )]
 
+    // Calculează ore pe fiecare proiect
+    const projectHoursMap = {}
+    allProjectActivities.forEach(pa => {
+      const project = projects.find(p => String(p.id) === String(pa.projectId))
+      const projectName = project ? project.name : 'Proiect necunoscut'
+      if (!projectHoursMap[projectName]) {
+        projectHoursMap[projectName] = 0
+      }
+      projectHoursMap[projectName] += pa.hours
+    })
+
     worksheetData.push([`Total zile cu activități: ${uniqueDates.length}`])
     worksheetData.push([`Zile lucrătoare: ${uniqueWorkDates.length}`])
     worksheetData.push([`Sărbători legale: ${totalHolidayDays}`])
     worksheetData.push([`Zile concediu: ${totalVacationDays}`])
+    worksheetData.push([])
+    worksheetData.push(['Ore lucrate pe proiecte:'])
+    
+    // Adaugă detalii pentru fiecare proiect
+    Object.entries(projectHoursMap)
+      .sort(([, hoursA], [, hoursB]) => hoursB - hoursA) // Sortează descrescător după ore
+      .forEach(([projectName, hours]) => {
+        worksheetData.push([`  • ${projectName}: ${hours}h`])
+      })
+    
     worksheetData.push([`Total ore lucrate pe proiecte: ${totalProjectHours}h`])
+    worksheetData.push([])
     worksheetData.push([`Total ore concediu: ${totalVacationHours}h`])
     worksheetData.push([`Total ore generale: ${totalHours}h`])
 
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
+
+    // Calculează indexul rândului "Statistici"
+    const statisticsRowIndex = worksheetData.findIndex(row => row[0] === 'Statistici')
 
     // Merge-uri pentru header și footer
     const merges = [
       { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, // Titlu
       { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } }, // Angajat
       { s: { r: 2, c: 0 }, e: { r: 2, c: 5 } }, // Luna
-      { s: { r: worksheetData.length - 8, c: 0 }, e: { r: worksheetData.length - 8, c: 5 } } // Statistici (8 în loc de 7)
+      { s: { r: statisticsRowIndex, c: 0 }, e: { r: statisticsRowIndex, c: 5 } } // Statistici
     ]
 
     // Adaugă merge-uri pentru zile cu mai multe proiecte
@@ -709,6 +793,16 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
         </div>
         <div className="action-buttons">
           <button 
+            className="notification-button"
+            onClick={() => setShowNotifications(!showNotifications)}
+            title="Notificări"
+          >
+            🔔 Notificări
+            {getIncompleteDays().length > 0 && (
+              <span className="notification-badge">{getIncompleteDays().length}</span>
+            )}
+          </button>
+          <button 
             className="export-button"
             onClick={exportToExcel}
             title="Exportă raportul în Excel"
@@ -717,6 +811,44 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
           </button>
         </div>
       </div>
+
+      {showNotifications && (
+        <div className="notifications-panel">
+          <div className="notifications-header">
+            <h3>🔔 Zile Incomplete</h3>
+            <button onClick={() => setShowNotifications(false)}>✕</button>
+          </div>
+          <div className="notifications-body">
+            {getIncompleteDays().length === 0 ? (
+              <div className="no-notifications">
+                <p>✅ Nu ai zile incomplete!</p>
+                <p className="subtitle">Toate zilele lucrătoare au fost completate.</p>
+              </div>
+            ) : (
+              <div className="notifications-list">
+                <p className="notifications-intro">
+                  Ai {getIncompleteDays().length} {getIncompleteDays().length === 1 ? 'zi lucrătoare' : 'zile lucrătoare'} fără activități:
+                </p>
+                {getIncompleteDays().map((day, index) => (
+                  <div 
+                    key={index} 
+                    className="notification-item"
+                    onClick={() => {
+                      setSelectedDate(day.date)
+                      setShowModal(true)
+                      setShowNotifications(false)
+                    }}
+                  >
+                    <span className="notification-icon">⚠️</span>
+                    <span className="notification-text">{day.dateStr}</span>
+                    <span className="notification-action">Completează →</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <MonthView
         currentMonth={getCurrentMonth()}
@@ -732,6 +864,7 @@ const Calendar = ({ employeeName, onChangeEmployee }) => {
           activity={getActivity(selectedDate)}
           projects={projects}
           onSave={saveActivity}
+          onDelete={deleteActivity}
           onClose={() => {
             setShowModal(false)
             setSelectedDate(null)

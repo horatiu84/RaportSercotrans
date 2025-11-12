@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import './ActivityModal.css'
 
-const ActivityModal = ({ date, activity, projects, onSave, onClose }) => {
+const ActivityModal = ({ date, activity, projects, onSave, onDelete, onClose }) => {
   // Normalizează projectId la string la inițializare
   const normalizeActivities = (activities) => {
     return (activities || []).map(pa => ({
@@ -37,6 +37,11 @@ const ActivityModal = ({ date, activity, projects, onSave, onClose }) => {
       )
       onSave(date, validActivities, false, 0)
     }
+    onClose()
+  }
+
+  const handleDelete = () => {
+    onDelete(date)
     onClose()
   }
 
@@ -118,8 +123,9 @@ const ActivityModal = ({ date, activity, projects, onSave, onClose }) => {
   }, [onClose])
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <>
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>Activități pentru {formatDate(date)}</h3>
           <button className="close-button" onClick={onClose}>
@@ -238,19 +244,27 @@ const ActivityModal = ({ date, activity, projects, onSave, onClose }) => {
         </div>
         
         <div className="modal-footer">
-          <button className="cancel-button" onClick={onClose}>
-            Anulează
-          </button>
-          <button 
-            className="save-button" 
-            onClick={handleSave}
-            disabled={!isVacation && projectActivities.every(pa => pa.hours === 0 || pa.description.trim() === '')}
-          >
-            Salvează ({getTotalHours()}h)
-          </button>
+          {(activity.isVacation || (activity.projects && activity.projects.length > 0)) && (
+            <button className="delete-button" onClick={handleDelete}>
+              🗑️ Șterge Activitatea
+            </button>
+          )}
+          <div className="footer-right">
+            <button className="cancel-button" onClick={onClose}>
+              Anulează
+            </button>
+            <button 
+              className="save-button" 
+              onClick={handleSave}
+              disabled={!isVacation && projectActivities.every(pa => pa.hours === 0 || pa.description.trim() === '')}
+            >
+              Salvează ({getTotalHours()}h)
+            </button>
+          </div>
         </div>
       </div>
     </div>
+    </>
   )
 }
 
